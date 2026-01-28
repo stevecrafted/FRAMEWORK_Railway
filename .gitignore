@@ -1,0 +1,10 @@
+# Ignore le dossier VS Code
+.vscode/
+
+# Ignore le dossier build
+build/
+
+# Ignore le dossier lib
+lib/
+
+target/

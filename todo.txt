@@ -1,0 +1,7 @@
+
+@GetMapping("/params")
+public String receiveData(@RequestBody Map<String, String> data) {
+    String name = data.get("name");
+
+    return "Paramètre reçu : name = " + name;
+}
