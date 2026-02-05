@@ -3,13 +3,13 @@ setlocal
 
 set "TOMCAT_HOME=C:\xampp\tomcat"
 set "TOMCAT_WEBAPPS=%TOMCAT_HOME%\webapps"
-set "TEST_LIB=C:\Users\steve\Documents\S5\MrNaina\TEST\src\main\webapp\WEB-INF\lib"
-set "JAR_FILE=target\SpringInit-1.jar"
+set "TEST_LIB=C:\Users\steve\Documents\S5\MrNaina\MasterProd\TEST\src\main\webapp\WEB-INF\lib"
+set "JAR_FILE=target\spring-init-framework-1.0.0.jar"
 
 echo ------------------------------
 echo Compiling and installing into local Maven repository...
 echo ------------------------------
-call mvn -DskipTests clean install
+call mvn clean install -DskipTests
 
 echo mvn done, return : %ERRORLEVEL%
 
@@ -34,6 +34,8 @@ if exist "%TEST_LIB%" (
     rmdir /S /Q "%TEST_LIB%"
 )
 mkdir "%TEST_LIB%"
+
+echo "copy lib mandeha"
 
 copy /Y "%JAR_FILE%" "%TEST_LIB%\"
 

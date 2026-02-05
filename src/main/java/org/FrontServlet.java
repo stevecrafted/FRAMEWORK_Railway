@@ -64,15 +64,13 @@ public class FrontServlet extends HttpServlet {
             // Jerena raha misy ao amle Url mapping le url miditra io
             cmu = CmuUtils.findMapping(path, urlMappings, req);
 
-            resp.setContentType("text/plain; charset=UTF-8");
-
             // resp.getWriter().write("ETU003861" + "\n");
-            // resp.getWriter().write("FrontServlet a reçu : " + req.getRequestURL() + "\n");
+            // resp.getWriter().write("FrontServlet a reÃ§u : " + req.getRequestURL() + "\n");
 
             if (cmu != null) {
                 Method methode = cmu.getMyMethod();
 
-                // ========== SPRINT 11 : VÉRIFICATION DE SÉCURITÉ ==========
+                // ========== SPRINT 11 : VÃ‰RIFICATION DE SÃ‰CURITÃ‰ ==========
                 try {
                     SecurityInterceptor.checkAuthorization(methode, req);
                 } catch (UnauthorizedException e) {
@@ -97,14 +95,16 @@ public class FrontServlet extends HttpServlet {
                 // printToClient(resp, "Cette url existe dans la classe " + cmu.getMyClass() + " dans la methode "
                 //         + cmu.getMyMethod());
 
-                // Vérifier si la méthode a l'annotation @Json
+                // VÃ©rifier si la mÃ©thode a l'annotation @Json
                 boolean isJsonResponse = methode.isAnnotationPresent(Json.class);
                 if (isJsonResponse) {
                     handleJsonResponse(resp, cmu, methodArgs);
+                    return;
                 }
 
-                // Exécution selon le type de retour
+                // ExÃ©cution selon le type de retour
                 if (cmu.getMyMethod().getReturnType() == String.class) {
+                    resp.setContentType("text/plain; charset=UTF-8");
                     // printToClient(resp, "Cette methode renvoie un String\n");
 
                     // Invocation avec les arguments
@@ -119,25 +119,42 @@ public class FrontServlet extends HttpServlet {
                     // Ato no mandefa ny attribute rehetra any am client
                     String result = cmu.ExecuteMethodeModelView(req, methodArgs);
 
+                    if (result != null && result.startsWith("redirect:")) {
+                        String target = result.substring("redirect:".length());
+                        if (!target.startsWith("/")) {
+                            target = "/" + target;
+                        }
+                        resp.sendRedirect(req.getContextPath() + target);
+                        return;
+                    }
+
                     // Affichage du resultat
                     defaultDispatcher = req.getRequestDispatcher("/" + result);
                     defaultDispatcher.forward(req, resp);
 
                 } else {
+                    resp.setContentType("text/plain; charset=UTF-8");
                     printToClient(resp, "Sady tsy String no tsy Model View ny averiny");
                 }
 
             } else {
+                if (defaultDispatcher != null) {
+                    defaultDispatcher.forward(req, resp);
+                    return;
+                }
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setContentType("text/plain; charset=UTF-8");
                 printToClient(resp, "Error 404");
             }
         } catch (Exception e) {
             e.printStackTrace();
+            resp.setContentType("text/plain; charset=UTF-8");
             printToClient(resp, "Erreur : " + e.getMessage());
         }
     }
 
     /**
-     * Sprint 9 : Gère les réponses JSON avec l'annotation @Json
+     * Sprint 9 : GÃ¨re les rÃ©ponses JSON avec l'annotation @Json
      */
     private void handleJsonResponse(HttpServletResponse resp, ClassMethodUrl cmu, Object[] methodArgs)
             throws Exception {
@@ -145,17 +162,17 @@ public class FrontServlet extends HttpServlet {
         resp.setContentType("application/json; charset=UTF-8");
 
         try {
-            // Exécuter la méthode du contrôleur
+            // ExÃ©cuter la mÃ©thode du contrÃ´leur
             Object result = cmu.executeMethod(methodArgs);
 
-            // Créer la réponse JSON standardisée
+            // CrÃ©er la rÃ©ponse JSON standardisÃ©e
             JsonResponse jsonResponse = JsonResponse.success(result);
 
             // Convertir en JSON et envoyer
             String json = JsonConverter.toJson(jsonResponse);
             resp.getWriter().write(json);
 
-            System.out.println("Réponse JSON envoyée : " + json);
+            System.out.println("RÃ©ponse JSON envoyÃ©e : " + json);
 
         } catch (Exception e) {
             e.printStackTrace();
